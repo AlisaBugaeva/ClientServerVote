@@ -15,10 +15,12 @@ public class Client {
                         new InputStreamReader(
                                 socket.getInputStream()));
         ){
-            System.out.println("Соединение с сервером установлено!");
+            System.out.println("Connected to server!");
+            System.out.println("");
 
-            System.out.println("Добро пожаловать в приложение для голосования");
-            System.out.println("Пожалуйста, выполните вход, введя команду 'login'");
+            System.out.println("Welcome to the voting app");
+            System.out.println("");
+            System.out.println("Please sign in by writing 'login'");
 
             Scanner sc = new Scanner(System.in);
             String command = sc.nextLine();
@@ -34,16 +36,16 @@ public class Client {
                     socket.close();
                 }*/
                 if(command.equals("login")){
-                    System.out.println("Введите имя пользователя");
+                    System.out.println("Enter username");
                     u = sc.nextLine();
-                    System.out.println("Вход для пользователя "+ u+ " выполнен");
+                    System.out.println("You logged in as "+ u);
 
-                    System.out.println("Введите команду");
+                    System.out.println("Please enter the command");
                     command= sc.nextLine();
                 }
                 else if(!u.equals("")){
                     if(command.equals("create topic")){
-                        System.out.println("Введите название раздела");
+                        System.out.println("Enter the topic name");
                         n=sc.nextLine();
                         request = "create topic#" + n;
                     }
@@ -53,41 +55,41 @@ public class Client {
                     else if(command.equals("create vote")){
                         StringBuilder ans = new StringBuilder();
                         ans.append("create vote#");
-                        System.out.println("Введите название темы, в которую хотите добавить голосование");
+                        System.out.println("Enter the topic name, in which you want to add a vote");
                         ans.append(sc.nextLine()).append("#");
                         ans.append(u).append("#");
-                        System.out.println("Введите название голосования");
+                        System.out.println("Enter the vote name");
                         ans.append(sc.nextLine()).append("#");
-                        System.out.println("Введите тему голосования");
+                        System.out.println("Enter the vote theme");
                         ans.append(sc.nextLine()).append("#");
-                        System.out.println("Введите количество вариантов ответа");
+                        System.out.println("Enter the number of answer options");
                         String count = sc.nextLine();
                         ans.append(count);
-                        System.out.println("Введите варианты ответов через Enter");
+                        System.out.println("Enter answer options using 'Enter'");
                         for (int i = 0; i < Integer.parseInt(count); i++) {
                             ans.append("#").append(sc.nextLine());
                         }
                         request= String.valueOf(ans);
                     }
                     else if(command.equals("view vote")){
-                        System.out.println("Введите название раздела");
+                        System.out.println("Enter the topic name");
                         String topic = sc.nextLine();
-                        System.out.println("Введите название голосования");
+                        System.out.println("Enter the vote name");
                         String voteName = sc.nextLine();
                         request = "view vote#" + topic+"#"+ voteName;
 
                     }
                     else if(command.equals("vote")){
-                        System.out.println("Введите название раздела");
+                        System.out.println("Enter the topic name");
                         String topic = sc.nextLine();
-                        System.out.println("Введите название голосования");
+                        System.out.println("Enter the vote name");
                         String voteName = sc.nextLine();
                         request = "vote#" + topic+"#"+ voteName;
                         writer.write(request);
                         writer.newLine();
                         writer.flush();
                         response = reader.readLine();
-                        if(response.equals("Такого голосования не существует! Ваш голос не принят")){
+                        if(response.equals("There is no such vote, so we can't accept your vote")){
                             request ="";
                         }
                         else{
@@ -96,14 +98,14 @@ public class Client {
                         }
                     }
                     else if(command.equals("delete")){
-                        System.out.println("Введите название раздела");
+                        System.out.println("Enter the topic name");
                         String topic = sc.nextLine();
-                        System.out.println("Введите название голосования");
+                        System.out.println("Enter the vote name");
                         String voteName = sc.nextLine();
                         request = "delete#" + u + "#" + topic+"#"+ voteName;
                     }
                     else{
-                        System.out.println("Вы ввели неверную команду");
+                        System.out.println("You entered an invalid command");
                         request="";
                     }
 
@@ -113,12 +115,11 @@ public class Client {
                     response = reader.readLine();
                     System.out.println(response);
 
-                    System.out.println("Введите команду");
+                    System.out.println("Please enter the command");
                     command= sc.nextLine();
                 }
                 else{
-                    System.out.println("Чтобы участвовать в голосованиях, " +
-                            "пожалуйста, введите имя пользователя через команду 'login'");
+                    System.out.println("To vote you should sign in by writing 'login'");
                 }
 
 

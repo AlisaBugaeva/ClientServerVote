@@ -1,4 +1,3 @@
-import java.awt.event.KeyEvent;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -9,7 +8,7 @@ import java.util.Scanner;
 public class Server {
     public static class myThread extends Thread{
         private Socket socket;
-        HashMap<String,Topic> topics;
+        private HashMap<String,Topic> topics;
 
 
         public myThread(Socket socket, HashMap<String,Topic> topics){
@@ -36,55 +35,55 @@ public class Server {
                     request = reader.readLine();
                     String response = "";
                     if (request.contains("create topic")) {
-                        response = "Раздел с названием " + createTopic(request, topics) + " создан";
+                        response = "The topic named " + createTopic(request, topics) + " created";
                     }
                     else if(request.contains("create vote" )){
                         String ans = createVote(request,topics);
                         if(ans.equals("no")){
-                            response = "Такого раздела не существует. Добавление не выполнено.";
+                            response = "There is no such topic, so you can't add a vote";
                         }
                         else{
-                            response = "Голосование с названием "+ ans +" создано";
+                            response = "The vote named "+ ans +" created";
                         }
                     }
                     else if(request.contains("view vote")){
                         String ans = viewVotes(request, topics);
                         if(ans.equals("no")){
-                            response = "Такого голосования не существует!";
+                            response = "There is no such vote!";
                         }
                         else {
-                            response = "Информация по голосованию " + ans;
+                            response = "Info for the vote " + ans;
                         }
                     }
                     else if(request.equals("view")){
-                        response = "Список разделов: " + viewTopics(topics);
+                        response = "List of topics: " + viewTopics(topics);
                     }
                     else if(request.contains("vote")){
                         String ans = viewOptions(request, topics);
                         if(ans.equals("no")){
-                            response = "Такого голосования не существует! Ваш голос не принят";
+                            response = "There is no such vote, so we can't accept your vote";
                         }
                         else {
-                            response = "Выберете понравившийся вариант ответа и напишите его:" + ans;
+                            response = "Please choose the option and write it " + ans;
                         }
                         writer.write(response);
                         writer.newLine();
                         writer.flush();
                         String vote = reader.readLine();
                         if(!vote.equals("")) {
-                            response = "Ваш голос за " + doVote(request, vote, topics) + " принят";
+                            response = "Your vote for " + doVote(request, vote, topics) + " accepted";
                         }
                     }
                     else if(request.contains("delete")){
                         String ans = deleteVote(request,topics);
                         if(ans.equals("no")){
-                            response = "Такого голосования не существует! Вы не можете его удалить";
+                            response = "There is no such vote, so you can't delete it";
                         }
                         else if(ans.equals("wrong")){
-                            response ="Вы не можете удалить это голосование, так как не вы его создали";
+                            response ="You can't delete this vote because it isn't yours";
                         }
                         else {
-                            response = "Удаление голосования " + ans + " выполнено";
+                            response = "You deleted the vote " + ans;
                         }
                     }
                     writer.write(response);
@@ -144,7 +143,7 @@ public class Server {
     public static StringBuilder viewTopics( HashMap<String,Topic> topics){
         StringBuilder ans = new StringBuilder();
         for (String t: topics.keySet()) {
-            ans.append(t).append(" (голосований в разделе: ").append(topics.get(t).getVotesList().size()).append("); ");
+            ans.append(t).append(" ((votes in topic= ").append(topics.get(t).getVotesList().size()).append("); ");
         }
         return ans;
     }
@@ -173,8 +172,8 @@ public class Server {
         String topic =subStr[1];
         if(topics.containsKey(topic) && topics.get(topic).getVotesList().containsKey(subStr[2])) {
             Vote vote = topics.get(topic).getVotesList().get(subStr[2]);
-            ans.append(vote.getVoteName()).append(": Тема: ")
-                    .append(vote.getVoteTheme()).append("; Голоса:")
+            ans.append(vote.getVoteName()).append(": Theme: ")
+                    .append(vote.getVoteTheme()).append("; Votes:")
                     .append(vote.getOptions());
             return String.valueOf(ans);
         }
@@ -219,22 +218,6 @@ public class Server {
         else
             return "no";
     }
-
-    /*public static int findTopicByName(ArrayList<Topic> topics, String topicName){
-        for (int i = 0; i < topics.size() ; i++) {
-            if(topics.get(i).getTopicName().equals(topicName))
-                return i;
-        }
-        return -1;
-    }*/
-
-    /*public static int findVoteByName(ArrayList<Vote> votes, String voteName){
-        for (int i = 0; i < votes.size() ; i++) {
-            if(votes.get(i).getVoteName().equals(voteName))
-                return i;
-        }
-        return -1;
-    }*/
 
     //команды сервера
 
