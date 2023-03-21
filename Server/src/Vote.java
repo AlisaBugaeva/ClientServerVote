@@ -1,13 +1,13 @@
 import java.util.HashMap;
 
 public class Vote {
-    private User creator;
+    private String creator;
     private String voteName;
     private String voteTheme;
     private int answersNumber;
     private HashMap<String,Integer> options;
 
-    public Vote(User creator, String voteName, String voteTheme, int answersNumber, HashMap<String, Integer> options) {
+    public Vote(String creator, String voteName, String voteTheme, int answersNumber, HashMap<String, Integer> options) {
         this.creator = creator;
         this.voteName = voteName;
         this.voteTheme = voteTheme;
@@ -15,11 +15,11 @@ public class Vote {
         this.options = options;
     }
 
-    public User getCreator() {
+    public String getCreator() {
         return creator;
     }
 
-    public void setCreator(User creator) {
+    public void setCreator(String creator) {
         this.creator = creator;
     }
 
