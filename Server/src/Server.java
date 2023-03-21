@@ -1,3 +1,4 @@
+import java.awt.event.KeyEvent;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -6,6 +7,82 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 public class Server {
+    public static class myThread extends Thread{
+        private Socket socket;
+        private PrintWriter out;
+        private BufferedReader in;
+        HashMap<String,Topic> topics;
+        ArrayList<User> clients;
+
+
+        public myThread(Socket socket, HashMap<String,Topic> topics,ArrayList<User> clients){
+            this.socket=socket;
+            this.topics=topics;
+            this.clients=clients;
+        }
+
+        public void run(){
+            try (BufferedWriter writer = new BufferedWriter(
+                         new OutputStreamWriter(
+                                 socket.getOutputStream()
+                         )
+                 );
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))
+            ) {
+                while (true) {
+
+                    //int keyCode = event.getKeyCode();
+                    /*Scanner sc = new Scanner(System.in);
+                    if(sc.nextInt()==1){
+                        System.out.println("pppp");
+                    }*/
+                    String request = null;
+                    request = reader.readLine();
+                    String response = "";
+                    if (request.contains("login")) {
+                        response = "Вход для пользователя " + login(request, clients) + " выполнен";
+                    } else if (request.contains("create topic")) {
+                        response = "Раздел с названием " + createTopic(request, topics) + " создан";
+                    }
+                    else if(request.contains("create vote" )){
+                        response = "Голосование с названием "+ createVote(request,topics) +" создано";
+                    }
+                    else if(request.contains("view vote")){
+                        response = "Информация по голосованию "+ viewVotes(request,topics);
+                    }
+                    else if(request.equals("view")){
+                        response = "Список разделов: " + viewTopics(topics);
+                    }
+                    else if(request.contains("vote")){
+                        response = "Выберете понравившийся вариант ответа и напишите его:" + viewOptions(request,topics);
+                        writer.write(response);
+                        writer.newLine();
+                        writer.flush();
+                        String vote = reader.readLine();
+                        response = "Ваш голос за " + doVote(request,vote,topics)+  " принят";
+                    }
+                    else if(request.contains("delete")){
+                        System.out.println(topics.get("Pets").getVotesList().toString());
+                        String ans = deleteVote(request,topics);
+                        if(ans.equals("wrong")){
+                            response ="Вы не можете удалить это голосование, так как не вы его создали";
+                        }
+                        else {
+                            System.out.println(topics.get("Pets").getVotesList().toString());
+                            response = "Удаление голосования " + ans + " выполнено";
+                        }
+                    }
+                    writer.write(response);
+                    writer.newLine();
+                    writer.flush();
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
 
     public static void main(String[] args) {
         HashMap<String,Topic> topics = new HashMap<>();
@@ -30,57 +107,10 @@ public class Server {
             //saveToFile(topics);
 
             Scanner sc = new Scanner(System.in);
-                try (Socket socket = server.accept();
-                     BufferedWriter writer = new BufferedWriter(
-                             new OutputStreamWriter(
-                                     socket.getOutputStream()
-                             )
-                     );
-                     BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))
-                ) {
-                    while (true) {
-                        String request = reader.readLine();
-                        String response = "";
-                        if (request.contains("login")) {
-                            response = "Вход для пользователя " + login(request, clients) + " выполнен";
-                        } else if (request.contains("create topic")) {
-                            response = "Раздел с названием " + createTopic(request, topics) + " создан";
-                        }
-                        else if(request.contains("create vote" )){
-                            response = "Голосование с названием "+ createVote(request,topics) +" создано";
-                        }
-                        else if(request.contains("view vote")){
-                            response = "Информация по голосованию "+ viewVotes(request,topics);
-                        }
-                        else if(request.equals("view")){
-                            response = "Список разделов: " + viewTopics(topics);
-                        }
-                        else if(request.contains("vote")){
-                            response = "Выберете понравившийся вариант ответа и напишите его:" + viewOptions(request,topics);
-                            writer.write(response);
-                            writer.newLine();
-                            writer.flush();
-                            String vote = reader.readLine();
-                            response = "Ваш голос за " + doVote(request,vote,topics)+  " принят";
-                        }
-                        else if(request.contains("delete")){
-                            System.out.println(topics.get("Pets").getVotesList().toString());
-                            String ans = deleteVote(request,topics);
-                            if(ans.equals("wrong")){
-                                response ="Вы не можете удалить это голосование, так как не вы его создали";
-                            }
-                            else {
-                                System.out.println(topics.get("Pets").getVotesList().toString());
-                                response = "Удаление голосования " + ans + " выполнено";
-                            }
-                        }
-                        writer.write(response);
-                        writer.newLine();
-                        writer.flush();
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            while(true){
+                new myThread(server.accept(),topics,clients).start();
+            }
+
 
 
         } catch (IOException e){
@@ -222,6 +252,15 @@ public class Server {
     }*/
 
     //команды сервера
+
+    /*public static boolean keyPressed(KeyEvent e) {
+        if (e.getKeyCode()==KeyEvent.VK_ENTER)
+            return true;
+        else
+            return false;
+    }*/
+
+
     public static void saveToFile(HashMap<String,Topic> topics) throws FileNotFoundException {
         PrintWriter writer = new PrintWriter("votes2.txt");
         writer.println(topics.size());
