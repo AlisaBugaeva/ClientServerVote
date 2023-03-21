@@ -3,9 +3,21 @@ import java.net.Socket;
 import java.util.Scanner;
 
 public class Client {
-    public static void main(String[] args) throws IOException {
+    final static String HOST = "localhost";
+    final static int PORT = 8080;
+    final static String CHOOSING_COMMAND ="Please chose and write the command:\n"+
+            "'create topic' - to create new topic\n"+
+            "'view' - to see all topics\n"+
+            "'view votes' - to see votes in the topic\n"+
+            "'create vote' - to create new vote\n"+
+            "'view vote' - to see the results of th vote\n"+
+            "'vote' - to vote\n"+
+            "'delete' - to delete the vote\n"+
+            "'exit' - to finish voting\n";
+
+    public static void main(String[] args) {
         try(
-                Socket socket = new Socket("127.0.0.1", 8000);
+                Socket socket = new Socket(HOST, PORT);
                 BufferedWriter writer = new BufferedWriter(
                         new OutputStreamWriter(
                                 socket.getOutputStream()
@@ -40,7 +52,8 @@ public class Client {
                     u = sc.nextLine();
                     System.out.println("You logged in as "+ u);
 
-                    System.out.println("Please enter the command");
+                    System.out.println("");
+                    System.out.println(CHOOSING_COMMAND);
                     command= sc.nextLine();
                 }
                 else if(!u.equals("")){
@@ -79,6 +92,12 @@ public class Client {
                         request = "view vote#" + topic+"#"+ voteName;
 
                     }
+                    else if(command.equals("view votes")){
+                        System.out.println("Enter the topic name");
+                        String topic = sc.nextLine();
+                        request = "view votes#" + topic;
+
+                    }
                     else if(command.equals("vote")){
                         System.out.println("Enter the topic name");
                         String topic = sc.nextLine();
@@ -115,7 +134,8 @@ public class Client {
                     response = reader.readLine();
                     System.out.println(response);
 
-                    System.out.println("Please enter the command");
+                    System.out.println("");
+                    System.out.println(CHOOSING_COMMAND);
                     command= sc.nextLine();
                 }
                 else{

@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 public class Server {
+    final static int PORT = 8080;
+
     public static class myThread extends Thread{
         private Socket socket;
         private HashMap<String,Topic> topics;
@@ -24,7 +26,7 @@ public class Server {
                  );
                  BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))
             ) {
-                while (true) {
+                while(true) {
 
                     //int keyCode = event.getKeyCode();
                     /*Scanner sc = new Scanner(System.in);
@@ -46,8 +48,17 @@ public class Server {
                             response = "The vote named "+ ans +" created";
                         }
                     }
-                    else if(request.contains("view vote")){
+                    else if(request.contains("view votes")){
                         String ans = viewVotes(request, topics);
+                        if(ans.equals("no")){
+                            response = "There is no such topic!";
+                        }
+                        else {
+                            response = "Votes from this topic: " + ans;
+                        }
+                    }
+                    else if(request.contains("view vote")){
+                        String ans = viewVote(request, topics);
                         if(ans.equals("no")){
                             response = "There is no such vote!";
                         }
@@ -101,7 +112,7 @@ public class Server {
     public static void main(String[] args) {
         HashMap<String,Topic> topics = new HashMap<>();
 
-        try( ServerSocket server = new ServerSocket( 8000);){
+        try( ServerSocket server = new ServerSocket( PORT)){
             System.out.println("Server started");
             //Topic t1 = new Topic("Pets");
             //topics.put("Pets", t1);
@@ -143,9 +154,24 @@ public class Server {
     public static StringBuilder viewTopics( HashMap<String,Topic> topics){
         StringBuilder ans = new StringBuilder();
         for (String t: topics.keySet()) {
-            ans.append(t).append(" ((votes in topic= ").append(topics.get(t).getVotesList().size()).append("); ");
+            ans.append(t).append(" (votes in topic= ").append(topics.get(t).getVotesList().size()).append("); ");
         }
         return ans;
+    }
+    public static String viewVotes(String line,  HashMap<String,Topic> topics){
+        StringBuilder ans = new StringBuilder();
+        String[] subStr = line.split("#");
+        String topic =subStr[1];
+        if(topics.containsKey(topic)) {
+            for (Vote vote: topics.get(topic).getVotesList().values()) {
+                ans.append("[ Vote name: ").append(vote.getVoteName()).append(": Theme: ")
+                        .append(vote.getVoteTheme()).append("; Votes:")
+                        .append(vote.getOptions()).append(" ]; ");
+            }
+            return String.valueOf(ans);
+        }
+        else
+            return "no";
     }
 
     public static String createVote(String line,  HashMap<String,Topic> topics){
@@ -166,7 +192,7 @@ public class Server {
             return "no";
     }
 
-    public static String viewVotes(String line,  HashMap<String,Topic> topics){
+    public static String viewVote(String line,  HashMap<String,Topic> topics){
         StringBuilder ans = new StringBuilder();
         String[] subStr = line.split("#");
         String topic =subStr[1];
