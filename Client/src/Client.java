@@ -144,6 +144,10 @@ public class Client {
 
 
             }
+            request="exit";
+            writer.write(request);
+            writer.newLine();
+            writer.flush();
             u="";
 
        } catch (IOException e) {

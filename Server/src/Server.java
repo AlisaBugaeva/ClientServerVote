@@ -26,16 +26,15 @@ public class Server {
                  );
                  BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))
             ) {
-                while(true) {
-
+                String request = "";
+                String response = "";
+                while(!request.equals("exit")) {
                     //int keyCode = event.getKeyCode();
                     /*Scanner sc = new Scanner(System.in);
                     if(sc.nextInt()==1){
                         System.out.println("pppp");
                     }*/
-                    String request = null;
                     request = reader.readLine();
-                    String response = "";
                     if (request.contains("create topic")) {
                         response = "The topic named " + createTopic(request, topics) + " created";
                     }
