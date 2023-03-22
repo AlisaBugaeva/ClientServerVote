@@ -3,19 +3,27 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
 
 public class Server {
-    final static int PORT = 8080;
+    private final static int PORT = 8080;
+    final static String CHOOSING_COMMAND ="Please chose and write the command:\n"+
+            "'load' - to load client's commands from file\n"+
+            "'save' - to save information about votes to file\n"+
+            "'exit' - to stop server\n";
 
     public static class myThread extends Thread{
         private Socket socket;
         private HashMap<String,Topic> topics;
+        private String choose;
+        private String fileName;
 
 
-        public myThread(Socket socket, HashMap<String,Topic> topics){
+        public myThread(Socket socket, HashMap<String,Topic> topics, String choose){
             this.socket=socket;
             this.topics=topics;
+            this.choose = choose;
         }
 
         public void run(){
@@ -28,12 +36,18 @@ public class Server {
             ) {
                 String request = "";
                 String response = "";
+                response = choose;
+                writer.write(response);
+                writer.newLine();
+                writer.flush();
+                if(choose.equals("2")){
+                    response =fileName;
+                    writer.write(response);
+                    writer.newLine();
+                    writer.flush();
+                }
+
                 while(!request.equals("exit")) {
-                    //int keyCode = event.getKeyCode();
-                    /*Scanner sc = new Scanner(System.in);
-                    if(sc.nextInt()==1){
-                        System.out.println("pppp");
-                    }*/
                     request = reader.readLine();
                     if (request.contains("create topic")) {
                         response = "The topic named " + createTopic(request, topics) + " created";
@@ -106,15 +120,19 @@ public class Server {
             }
         }
 
+        public void setFileName(String fileName) {
+            this.fileName = fileName;
+        }
     }
+
 
     public static void main(String[] args) {
         HashMap<String,Topic> topics = new HashMap<>();
 
         try( ServerSocket server = new ServerSocket( PORT)){
             System.out.println("Server started");
-            //Topic t1 = new Topic("Pets");
-            //topics.put("Pets", t1);
+
+            //начальные данные
             HashMap<String,Integer> options = new HashMap<>();
             options.put("Tom",3);
             options.put("Garfild",2);
@@ -125,12 +143,44 @@ public class Server {
             t1.addVote(v1);
             t1.addVote(v2);
             topics.put(t1.getTopicName(),t1);
-            //loadFromFile(topics);
-            //saveToFile(topics);
 
+            System.out.println("How would you like to start? Enter the number");
+            System.out.println("1 - in client mode");
+            System.out.println("2 - in server mode");
             Scanner sc = new Scanner(System.in);
-            while(true){
-                new myThread(server.accept(),topics).start();
+            int modeNumber = sc.nextInt();
+            if(modeNumber == 1){
+                while(true){
+                    new myThread(server.accept(),topics,"1").start();
+                }
+            }
+            else if(modeNumber == 2){
+                List<myThread> threads = new ArrayList<>();
+                System.out.println(CHOOSING_COMMAND);
+                sc.nextLine();
+                String command = sc.nextLine();
+                while (!command.equals("exit")) {
+                    if (command.equals("load")) {
+                        System.out.println("How many clients would you like to make?");
+                        int count = sc.nextInt();
+                        sc.nextLine();
+                        System.out.println("Enter file names using 'Enter'");
+                        String[] fileNames = new String[count];
+                        for (int i = 0; i < count; i++) {
+                            fileNames[i]= sc.nextLine();
+                        }
+                        for (int i = 0; i < count; i++) {
+                            loadFromFile(topics,fileNames[i],threads,server);
+                        }
+                    } else if (command.equals("save")){
+                        System.out.println("Enter the file name");
+                        String fileName = sc.nextLine();
+                        saveToFile(topics, fileName);
+                    }
+                    System.out.println(CHOOSING_COMMAND);
+                    command = sc.nextLine();
+                }
+
             }
 
 
@@ -246,16 +296,9 @@ public class Server {
 
     //команды сервера
 
-    /*public static boolean keyPressed(KeyEvent e) {
-        if (e.getKeyCode()==KeyEvent.VK_ENTER)
-            return true;
-        else
-            return false;
-    }*/
 
-
-    public static void saveToFile(HashMap<String,Topic> topics) throws FileNotFoundException {
-        PrintWriter writer = new PrintWriter("votes2.txt");
+    public static void saveToFile(HashMap<String,Topic> topics, String fileName) throws FileNotFoundException {
+        PrintWriter writer = new PrintWriter(fileName);
         writer.println(topics.size());
         for (Topic t: topics.values()) {
             writer.println(t.getTopicName());
@@ -273,29 +316,10 @@ public class Server {
         writer.close();
     }
 
-    public static void loadFromFile(HashMap<String,Topic> topics) throws FileNotFoundException {
-        Scanner sc = new Scanner(new File("votes.txt"));
-        int N = Integer.parseInt(sc.nextLine());
-        for (int i = 0; i < N; i++) {
-            Topic topic = new Topic(sc.nextLine());
-            int M = Integer.parseInt(sc.nextLine());
-            ArrayList<Vote> votesList = new ArrayList<>();
-            for (int j = 0; j < M; j++) {
-                String creator = sc.nextLine();
-                String name = sc.nextLine();
-                String theme = sc.nextLine();
-                int K = Integer.parseInt(sc.nextLine());
-                HashMap<String,Integer> options = new HashMap<>();
-                int answerNumbers =0;
-                for (int k = 0; k < K; k++) {
-                    String line = sc.nextLine();
-                    String[] subStr = line.split(" ");
-                    options.put(subStr[0], Integer.parseInt(subStr[1]));
-                    answerNumbers+=Integer.parseInt(subStr[1]);
-                }
-                topic.addVote(new Vote(creator,name,theme,answerNumbers,options));
-            }
-            topics.put(topic.getTopicName(),topic);
-        }
+    public static void loadFromFile(HashMap<String,Topic> topics,String fileName,List<myThread> threads, ServerSocket server) throws IOException {
+        threads.add(new myThread(server.accept(),topics, "2"));
+        myThread thisThread = threads.get(threads.size()-1);
+        thisThread.setFileName(fileName);
+        thisThread.start();
     }
 }
