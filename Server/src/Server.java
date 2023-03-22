@@ -13,6 +13,69 @@ public class Server {
             "'save' - to save information about votes to file\n"+
             "'exit' - to stop server\n";
 
+    public static void main(String[] args) {
+        HashMap<String,Topic> topics = new HashMap<>();
+
+        try(ServerSocket server = new ServerSocket(PORT)){
+            System.out.println("Server started!");
+
+            //начальные данные
+            HashMap<String,Integer> options = new HashMap<>();
+            options.put("Tom",3);
+            options.put("Garfild",2);
+            options.put("Pushin",5);
+            Vote v1 = new Vote("Tomas","Cat", "Finding best cat", 10,options);
+            Vote v2 = new Vote("Tomas","Dog", "Finding best dog", 10,options);
+            Topic t1 = new Topic("Pets");
+            t1.addVote(v1);
+            t1.addVote(v2);
+            topics.put(t1.getTopicName(),t1);
+            //
+
+            System.out.println("How would you like to start? Enter the number");
+            System.out.println("1 - in client mode");
+            System.out.println("2 - in server mode");
+            Scanner sc = new Scanner(System.in);
+            int modeNumber = sc.nextInt();
+            if(modeNumber == 1){
+                while(true){
+                    new myThread(server.accept(),topics,"1").start();
+                }
+            }
+            else if(modeNumber == 2){
+                List<myThread> threads = new ArrayList<>();
+                System.out.println(CHOOSING_COMMAND);
+                sc.nextLine();
+                String command = sc.nextLine();
+                while (!command.equals("exit")) {
+                    if (command.equals("load")) {
+                        System.out.println("How many clients would you like to make?");
+                        int count = sc.nextInt();
+                        sc.nextLine();
+                        System.out.println("Enter file names using 'Enter'");
+                        String[] fileNames = new String[count];
+                        for (int i = 0; i < count; i++) {
+                            fileNames[i]= sc.nextLine();
+                        }
+                        for (int i = 0; i < count; i++) {
+                            loadFromFile(topics,fileNames[i],threads,server);
+                        }
+                    } else if (command.equals("save")){
+                        System.out.println("Enter the file name");
+                        String fileName = sc.nextLine();
+                        saveToFile(topics, fileName);
+                    }
+                    System.out.println(CHOOSING_COMMAND);
+                    command = sc.nextLine();
+                }
+
+            }
+
+        } catch (IOException e){
+            throw new RuntimeException();
+        }
+    }
+
     public static class myThread extends Thread{
         private Socket socket;
         private HashMap<String,Topic> topics;
@@ -21,27 +84,32 @@ public class Server {
 
 
         public myThread(Socket socket, HashMap<String,Topic> topics, String choose){
-            this.socket=socket;
-            this.topics=topics;
+            this.socket = socket;
+            this.topics = topics;
             this.choose = choose;
+        }
+
+        public void setFileName(String fileName) {
+            this.fileName = fileName;
         }
 
         public void run(){
             try (BufferedWriter writer = new BufferedWriter(
-                         new OutputStreamWriter(
-                                 socket.getOutputStream()
-                         )
-                 );
-                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))
+                    new OutputStreamWriter(
+                            socket.getOutputStream()
+                    )
+            );
+                 BufferedReader reader = new BufferedReader(
+                         new InputStreamReader(
+                                 socket.getInputStream()))
             ) {
                 String request = "";
-                String response = "";
-                response = choose;
+                String response =  choose;
                 writer.write(response);
                 writer.newLine();
                 writer.flush();
                 if(choose.equals("2")){
-                    response =fileName;
+                    response = fileName;
                     writer.write(response);
                     writer.newLine();
                     writer.flush();
@@ -119,79 +187,10 @@ public class Server {
                 e.printStackTrace();
             }
         }
-
-        public void setFileName(String fileName) {
-            this.fileName = fileName;
-        }
     }
 
 
-    public static void main(String[] args) {
-        HashMap<String,Topic> topics = new HashMap<>();
-
-        try( ServerSocket server = new ServerSocket( PORT)){
-            System.out.println("Server started");
-
-            //начальные данные
-            HashMap<String,Integer> options = new HashMap<>();
-            options.put("Tom",3);
-            options.put("Garfild",2);
-            options.put("Pushin",5);
-            Vote v1 = new Vote("Tomas","Cat", "Finding best cat", 10,options);
-            Vote v2 = new Vote("Tomas","Dog", "Finding best dog", 10,options);
-            Topic t1 = new Topic("Pets");
-            t1.addVote(v1);
-            t1.addVote(v2);
-            topics.put(t1.getTopicName(),t1);
-
-            System.out.println("How would you like to start? Enter the number");
-            System.out.println("1 - in client mode");
-            System.out.println("2 - in server mode");
-            Scanner sc = new Scanner(System.in);
-            int modeNumber = sc.nextInt();
-            if(modeNumber == 1){
-                while(true){
-                    new myThread(server.accept(),topics,"1").start();
-                }
-            }
-            else if(modeNumber == 2){
-                List<myThread> threads = new ArrayList<>();
-                System.out.println(CHOOSING_COMMAND);
-                sc.nextLine();
-                String command = sc.nextLine();
-                while (!command.equals("exit")) {
-                    if (command.equals("load")) {
-                        System.out.println("How many clients would you like to make?");
-                        int count = sc.nextInt();
-                        sc.nextLine();
-                        System.out.println("Enter file names using 'Enter'");
-                        String[] fileNames = new String[count];
-                        for (int i = 0; i < count; i++) {
-                            fileNames[i]= sc.nextLine();
-                        }
-                        for (int i = 0; i < count; i++) {
-                            loadFromFile(topics,fileNames[i],threads,server);
-                        }
-                    } else if (command.equals("save")){
-                        System.out.println("Enter the file name");
-                        String fileName = sc.nextLine();
-                        saveToFile(topics, fileName);
-                    }
-                    System.out.println(CHOOSING_COMMAND);
-                    command = sc.nextLine();
-                }
-
-            }
-
-
-
-        } catch (IOException e){
-            throw new RuntimeException();
-        }
-
-
-    }
-
+    //команды клиента
     public static String createTopic(String line, HashMap<String,Topic> topics){
         String[] subStr = line.split("#");
         String name = subStr[1];
@@ -294,9 +293,8 @@ public class Server {
             return "no";
     }
 
+
     //команды сервера
-
-
     public static void saveToFile(HashMap<String,Topic> topics, String fileName) throws FileNotFoundException {
         PrintWriter writer = new PrintWriter(fileName);
         writer.println(topics.size());

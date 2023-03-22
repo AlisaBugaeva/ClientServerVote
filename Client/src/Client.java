@@ -30,11 +30,11 @@ public class Client {
 
             String choose = reader.readLine();
             if(choose.equals("1")){
-                workAsClient(writer,reader);
+                workInClientMode(writer,reader);
             }
             else {
                 String fileName = reader.readLine();
-                workAsDefaultClient(writer,reader,fileName);
+                workInServerMode(writer,reader,fileName);
             }
 
 
@@ -43,7 +43,7 @@ public class Client {
         }
     }
 
-    public static void workAsClient(BufferedWriter writer, BufferedReader reader) throws IOException {
+    public static void workInClientMode(BufferedWriter writer, BufferedReader reader) throws IOException {
         System.out.println("Connected to server!");
         System.out.println("");
 
@@ -59,11 +59,6 @@ public class Client {
         String response;
 
         while(!command.equals("exit")){
-                /*if (command.equals("exit")){
-                    writer.close();
-                    reader.close();
-                    socket.close();
-                }*/
             if(command.equals("login")){
                 System.out.println("Enter username");
                 u = sc.nextLine();
@@ -169,7 +164,7 @@ public class Client {
 
     }
 
-    public static void workAsDefaultClient(BufferedWriter writer, BufferedReader reader, String fileName) throws IOException {
+    public static void workInServerMode(BufferedWriter writer, BufferedReader reader, String fileName) throws IOException {
 
         Scanner sc = new Scanner(new File(fileName));
         String command = sc.nextLine();
@@ -251,14 +246,11 @@ public class Client {
             else{
                 //System.out.println("To vote you should sign in by writing 'login'");
             }
-
-
         }
         request="exit";
         writer.write(request);
         writer.newLine();
         writer.flush();
         u="";
-
     }
 }
