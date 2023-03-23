@@ -233,7 +233,7 @@ public class Client {
                     request = "delete#" + u + "#" + topic+"#"+ voteName;
                 }
                 else{
-                    request="";
+                    request="wrong command";
                 }
 
                 writer.write(request);
@@ -244,7 +244,7 @@ public class Client {
                 command= sc.nextLine();
             }
             else{
-                //System.out.println("To vote you should sign in by writing 'login'");
+                request="wrong command";
             }
         }
         request="exit";

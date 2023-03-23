@@ -1,0 +1,7 @@
+login
+Tomas
+view
+delete
+Pets
+Cat
+exit

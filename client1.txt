@@ -1,0 +1,13 @@
+login
+Kate
+create topic
+friends
+create vote
+friends
+my best friends
+Who?
+3
+Jack
+Mily
+Ron
+exit

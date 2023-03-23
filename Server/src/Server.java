@@ -24,8 +24,12 @@ public class Server {
             options.put("Tom",3);
             options.put("Garfild",2);
             options.put("Pushin",5);
+            HashMap<String,Integer> options2 = new HashMap<>();
+            options2.put("Sharik",1);
+            options2.put("Puch",2);
+            options2.put("Lucky",4);
             Vote v1 = new Vote("Tomas","Cat", "Finding best cat", 10,options);
-            Vote v2 = new Vote("Tomas","Dog", "Finding best dog", 10,options);
+            Vote v2 = new Vote("Tomas","Dog", "Finding best dog", 10,options2);
             Topic t1 = new Topic("Pets");
             t1.addVote(v1);
             t1.addVote(v2);
@@ -103,6 +107,7 @@ public class Server {
                          new InputStreamReader(
                                  socket.getInputStream()))
             ) {
+                boolean flag = true;
                 String request = "";
                 String response =  choose;
                 writer.write(response);
@@ -118,12 +123,24 @@ public class Server {
                 while(!request.equals("exit")) {
                     request = reader.readLine();
                     if (request.contains("create topic")) {
-                        response = "The topic named " + createTopic(request, topics) + " created";
+                        String ans = createTopic(request, topics);
+                        if(ans.equals("already exists")){
+                            response = "This topic is "+ ans +"Please make another one";
+                            flag = false;
+                        }
+                        else{
+                            response = "The topic named " + ans + " created";
+                        }
                     }
                     else if(request.contains("create vote" )){
                         String ans = createVote(request,topics);
                         if(ans.equals("no")){
                             response = "There is no such topic, so you can't add a vote";
+                            flag = false;
+                        }
+                        else if(ans.equals("already exists")){
+                            response = "This vote is "+ ans +". Please make another one";
+                            flag = false;
                         }
                         else{
                             response = "The vote named "+ ans +" created";
@@ -133,6 +150,7 @@ public class Server {
                         String ans = viewVotes(request, topics);
                         if(ans.equals("no")){
                             response = "There is no such topic!";
+                            flag = false;
                         }
                         else {
                             response = "Votes from this topic: " + ans;
@@ -142,6 +160,7 @@ public class Server {
                         String ans = viewVote(request, topics);
                         if(ans.equals("no")){
                             response = "There is no such vote!";
+                            flag = false;
                         }
                         else {
                             response = "Info for the vote " + ans;
@@ -154,6 +173,7 @@ public class Server {
                         String ans = viewOptions(request, topics);
                         if(ans.equals("no")){
                             response = "There is no such vote, so we can't accept your vote";
+                            flag = false;
                         }
                         else {
                             response = "Please choose the option and write it " + ans;
@@ -170,17 +190,30 @@ public class Server {
                         String ans = deleteVote(request,topics);
                         if(ans.equals("no")){
                             response = "There is no such vote, so you can't delete it";
+                            flag = false;
                         }
                         else if(ans.equals("wrong")){
                             response ="You can't delete this vote because it isn't yours";
+                            flag = false;
                         }
                         else {
                             response = "You deleted the vote " + ans;
                         }
                     }
+                    else if(request.equals("wrong command")){
+                        flag = false;
+                    }
                     writer.write(response);
                     writer.newLine();
                     writer.flush();
+                }
+                if(flag){
+                    System.out.println("The file '"+fileName+"' was executed. Everything is OK!");
+                    System.out.println("");
+                }
+                else{
+                    System.out.println("The file '"+ fileName +"' was executed, but some commands were written incorrectly, so they weren't executed... ");
+                    System.out.println("");
                 }
 
             } catch (Exception e) {
@@ -194,9 +227,13 @@ public class Server {
     public static String createTopic(String line, HashMap<String,Topic> topics){
         String[] subStr = line.split("#");
         String name = subStr[1];
-        //Сделать проверку на уникальность?
-        topics.put(name,new Topic(name));
-        return name;
+        if(topics.containsKey(name)){
+            return "already exists";
+        }
+        else {
+            topics.put(name, new Topic(name));
+            return name;
+        }
     }
 
     public static StringBuilder viewTopics( HashMap<String,Topic> topics){
@@ -232,9 +269,14 @@ public class Server {
                 votes.put(subStr[i], 0);
             }
 
-            Vote vote = new Vote(subStr[2], subStr[3], subStr[4], count, votes);
-            topics.get(topic).addVote(vote);
-            return vote.getVoteName();
+            if(topics.get(topic).getVotesList().containsKey(subStr[3])){
+                return "already exists";
+            }
+            else{
+                Vote vote = new Vote(subStr[2], subStr[3], subStr[4], count, votes);
+                topics.get(topic).addVote(vote);
+                return vote.getVoteName();
+            }
         }
         else
             return "no";
@@ -312,6 +354,8 @@ public class Server {
             }
         }
         writer.close();
+        System.out.println("Information was saved to file '"+ fileName+"'");
+        System.out.println("");
     }
 
     public static void loadFromFile(HashMap<String,Topic> topics,String fileName,List<myThread> threads, ServerSocket server) throws IOException {
